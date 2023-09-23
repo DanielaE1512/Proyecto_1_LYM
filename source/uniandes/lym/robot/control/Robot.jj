@@ -1,0 +1,415 @@
+/*
+Gramatica para el Robot:
+Autor: Alejandro Arango
+Modificado por: Silvia Takahashi
+Modificado por: Juan Pablo Morales.
+Agregadas producciones para manejar globos
+Modificado por Silvia Takahashi
+
+
+ **/
+
+
+options 
+{
+  
+	LOOKAHEAD = 1; 
+	IGNORE_CASE = true;
+	STATIC = false;
+	
+}
+   
+
+PARSER_BEGIN(Robot)
+
+package uniandes.lym.robot.control;
+
+import uniandes.lym.robot.kernel.*;
+import uniandes.lym.robot.view.Console;
+ 
+import java.awt.Point;
+import java.io.*;
+import java.util.Vector;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+@SuppressWarnings("serial")
+public class Robot 
+{
+
+
+	private RobotWorldDec world;
+	
+	
+	void setWorld(RobotWorld w) {
+		world = (RobotWorldDec) w;	
+	}
+
+	/*Mapa que tiene la estructura:
+		key: nombre de la variable global.
+		value: valor de dicha variable global.
+	*/
+
+	HashMap<String, Integer> WV = new HashMap<String, Integer>();
+
+	/*Mapa que tiene la estructura:
+		key: nombre de la variable local.
+		value: valor de dicha variable local.
+	*/
+	HashMap<String, Integer> LV = new HashMap<String, Integer>();
+
+	/* Mapa donde que tiene la estructura:
+		key : nombre de un procedimiento declarado.
+		value: listas que contienen los strings de las variables declaradas para el procedimiento.
+	*/
+	HashMap<String, ArrayList> proceduresVars = new HashMap<String, ArrayList>();
+	
+	/* Mapa que tiene la estructura:
+		key: nombre de un procedimiento.
+		value: mapas que cumplen la structura:
+			key : strings de los comandos o procedimientos que se ejecutan.
+			value: lista de los strigns ordenados que se usan como parametro en los comandos o procedimientos.
+	*/
+	HashMap<String, HashMap <String, ArrayList> > proceduresE = new HashMap<String,  HashMap <String, ArrayList>>();
+
+	/* Mapa que tiene la estructura:
+		key: nombre de un procedimiento.
+		value: nombre de los comandos usados dentro del procedimiento de manera ordenada.
+	*/
+	HashMap<String, ArrayList< String > > proceduresLines = new HashMap<String, ArrayList< String > >();
+	
+	String salida=new String();
+}
+PARSER_END(Robot)
+
+SKIP:
+{
+	" "
+	|"\r"
+	|"\t"
+	|"\n"
+}
+
+TOKEN: /* Nombres de Comandos */
+{
+
+	<MOV:  "Mov">
+	|<RIGHT: "RIGHT">
+	|<PUT: "Put">
+	|<PICK: "Pick">
+	|< POP: "Pop" >
+	|<GO: "GO" >
+    |< HOP:  "HOP" >		
+
+}
+
+TOKEN:
+{
+	<BALLOONS:  "BALLOONS" >
+	|<CHIPS:     "CHIPS"  >	
+
+}
+
+
+
+TOKEN :
+{
+	<NUM: (<DIGIT>)+ >
+	|  	<#DIGIT: ["0"-"9"] >
+        
+}
+
+
+/* Palabras reservadas */
+TOKEN:
+{
+	< defproc: " defproc" >
+	|< defvar: " defvar" >
+	|< dir: ("north"|"south"|"east"|"west") >
+}
+
+
+/* Condicionales */
+TOKEN:
+{
+	< facing: "facing" >
+	|< can: "can" >
+	|< not: "not" > 
+}
+
+/* estructuras de control */
+TOKEN:
+{
+	< IF: "if">
+	|< ELSE: "esle">
+	|< WHILE: "while">
+	|< REPEAT: "repeat">
+	|< TIMES: "times">
+}
+
+TOKEN:
+{
+  	< NAME: < LETRA >(< LETRA >|< NUM >)*  >
+	| < #LETRA : ["a"-"z"]> 
+}
+
+
+//boolean command(uniandes.lym.robot.view.Console sistema) :
+boolean command(Console sistema):
+	{	
+		
+		int x,y;
+		salida=new String();	
+	}
+	
+	
+	{
+		(		  (
+		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
+		| <MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+		| <HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
+		| <GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
+		| <PUT> "("  put() ")"					  			
+		| <PICK> "(" get()  ")"	
+	    | < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		) ";" 
+	
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		})+
+	
+		| <EOF> {return false;} 
+	}
+
+void put() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
+		|( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+	
+	}
+
+void get() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+	
+	}
+
+/*basics */
+
+void vproc():
+	{
+	  String id;
+	  ArrayList< String > params = new ArrayList< String >();
+	  ArrayList< String > commands = new ArrayList< String >();
+	  LV.clear();
+	}
+	{
+	  < defproc >id = name()"("params = getparams() {
+	    for (int i=0 ; i < params.size(); i++ ) {
+	      	LV.put(params.get(i),null);
+	      }
+	    }
+	    ")"vblock() {
+	    	proceduresVars.put(id,params);
+	    	proceduresLines.put(id,commads);
+	    }
+	}
+
+void vvariable():
+	{
+	  String id;
+	  int x;
+	}
+	{
+	  < defvar >id=name()x=value() { WV.put(id,x); }
+	}
+
+void vasigna():
+	{
+	  String id;
+	  int x;
+	}
+	{
+	  id=name()"="x=value() {
+	    if (WV.containsKey(id)) {
+			WV.put(id,x);
+	      }
+	      
+	    else if (LV.containsKey(id)) {
+			LV.put(id,x);
+	      }
+	    }
+	}
+
+void gcommands():
+	{
+	}
+	{
+	  (command()|procedure()) 
+	}
+
+/* structures */
+
+void procedure():
+	{
+	  String id;
+	  ArrayList< String > params = new ArrayList< String >();
+	}
+	{
+	  (
+	    id = name() {if (proceduresE.containsKey(id)) { params = proceduresVars.get(id); }}"("paramsinit(params)")"	  )
+	}
+
+void vblock():
+	{
+	}
+	{
+	  "{"vblockline()(";"vblockline())*"}" 
+	}
+
+
+void vblockline():
+	{
+	}
+	{
+	 	(controlstructure()
+	 	|vasigna()
+	 	|gcommands()
+	 	)
+	}
+
+void conditional():
+	{
+	  boolean b;
+	  int dir;
+	}
+	{
+	  b = not()(
+	    < facing > "("< dir >")"
+		|< can >"("vblockline()")" { if (world.getPosition()) { return true;}}	  )
+	}
+
+void controlstructure():
+	{
+	}
+	{
+	 	(	 	  < IF >conditional()vblock()< ELSE >vblock()
+	 	|< WHILE >conditional()vblock()
+	 	|< REPEAT >value()< TIMES >vblock() )
+	}
+
+//structures creation
+
+
+//Helpers
+
+/**
+ * Unsigned decimal number
+ * @return the corresponding value of the string
+ * @error  corresponding value is too large
+ */
+
+int num() throws Error:
+	{	
+		int total=1;
+	}
+	{
+		<NUM>
+		{
+			try 
+			{
+				total = Integer.parseInt(token.image);
+			} 
+			catch (NumberFormatException ee) 
+			{
+				throw new Error("Number out of bounds: "+token.image+" !!");
+			}
+			return total;
+		}
+	}
+
+String name():
+
+{
+}
+{
+  < NAME >
+  {
+    return new String(token.image);
+   }
+}
+
+ArrayList getparams():
+	{
+	  ArrayList< String > params = new ArrayList< String >();
+	  String id,id2 = null;
+	}
+	{
+	  (	    id = name(){params.add(id);}
+	    ("," id2 = name())* { params.add(id2); }
+	  )?
+	  { return params;}
+	}
+
+int paramsinit(ArrayList< String > params):
+	{
+	  int i,x;
+	  i = 0;
+	  String id;
+	}
+	{
+	  (
+	     x = value(){id = params.get(i); i++; LV.put(id,x);}
+	    ("," x = value())* { id = params.get(i); i++; LV.put(id,x); }
+	  )?
+	}
+
+int value() throws Error:
+	{
+	  String i;
+	  int x;
+	}
+	{
+	  (	< NAME >
+		  	{  i = token.image;
+		  	
+			  	if (!(WV.containsKey(i) || LV.containsKey(i))) {
+						throw new Error("Variable not found");
+			  	  }
+			  	   
+			  	else if (WV.containsKey(i)) {  
+					x = WV.get(i);
+			  	  }
+			  	  
+			  	else {
+			  	  	x = LV.get(i);
+			  	  }  
+		  	}
+	 	|x = num()
+	 	{ return x;}
+	  )
+	}
+
+boolean not():
+	{
+	  boolean b = false;
+	}
+	{
+	  (< not >)? { b = true;}
+	  { return b;}
+	 }
