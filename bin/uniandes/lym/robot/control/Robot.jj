@@ -156,6 +156,8 @@ TOKEN:
 
 
 //boolean command(uniandes.lym.robot.view.Console sistema) :
+
+
 boolean command(Console sistema):
 	{	
 		
@@ -272,7 +274,7 @@ void procedure():
 	}
 	{
 	  (
-	    id = name() {if (proceduresE.containsKey(id)) { params = proceduresVars.get(id); }}"("paramsinit(params)")"	  )
+	    id = name() {if (proceduresVars.containsKey(id)) { params = proceduresVars.get(id); }}"("paramsinit(params)")"	  )
 	}
 
 void vblock():
@@ -366,7 +368,7 @@ ArrayList getparams():
 	  { return params;}
 	}
 
-int paramsinit(ArrayList< String > params):
+int paramsinit(ArrayList< String > params) throws Error:
 	{
 	  int i,x;
 	  i = 0;
@@ -377,6 +379,7 @@ int paramsinit(ArrayList< String > params):
 	     x = value(){id = params.get(i); i++; LV.put(id,x);}
 	    ("," x = value())* { id = params.get(i); i++; LV.put(id,x); }
 	  )?
+	  { if (params.length()-1 != i) { throw new Error("Number of parametres does not match the definition")}}
 	}
 
 int value() throws Error:
