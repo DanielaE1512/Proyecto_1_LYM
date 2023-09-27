@@ -360,7 +360,7 @@ void walk():
 {
   < WALK >"(" x = num()( D = D() | O= O())?")"
   { if (O != null )
-  	{ world.moveFoward(x);}
+  	{ world.moveFoward(x,false);}
   	else if ( D != null )
   		{ for ( int i = 1; i <= x; i++)
   			{ if ( j.equalsIgnoreCase("right")) {
@@ -370,7 +370,30 @@ void walk():
 		      else if ( j.equalsIgnoreCase("front")) {
 		  		world.up();}
 		      else { world.down(); }}}
-	else { world.moveFoward(x);}
+	else { world.moveFoward(x,false);}
+  }
+}
+
+void leap():
+{
+  int x;
+  String D = null;
+  String O = null;
+}
+{
+  < WALK >"(" x = num()( D = D() | O= O())?")"
+  { if (O != null )
+  	{ world.moveFoward(x,true);}
+  	else if ( D != null )
+  		{ for ( int i = 1; i <= x; i++)
+  			{ if ( j.equalsIgnoreCase("right")) {
+		  		world.right();}
+			  else if ( j.equalsIgnoreCase("left")) {
+		  		world.left();}
+		      else if ( j.equalsIgnoreCase("front")) {
+		  		world.up();}
+		      else { world.down(); }}}
+	else { world.moveFoward(x,true);}
   }
 }
 
