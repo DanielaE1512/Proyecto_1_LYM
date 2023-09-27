@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
 Gramatica para el Robot:
 Autor: Alejandro Arango
@@ -498,3 +499,5 @@ boolean not():
 	  (< not >)? { b = true;}
 	  { return b;}
 	 }
+=======
+>>>>>>> branch 'master' of https://github.com/DanielaE1512/Proyecto_1_LYM.git
