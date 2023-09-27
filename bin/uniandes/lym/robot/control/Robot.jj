@@ -100,8 +100,22 @@ TOKEN: /* Nombres de Comandos */
 	|<PICK: "Pick">
 	|< POP: "Pop" >
 	|<GO: "GO" >
-    |< HOP:  "HOP" >		
+    |< HOP:  "HOP" >
+    	
+}
+TOKEN: /* Nombres de Comandos */
+{
 
+	<JUMP:  "jump">
+	|<WALK: "walk">
+	|<LEAP: "leap">
+	|<TURN: "turn">
+	|< TURNTO: "turnto" >
+	|<DROP: "drop" >
+    |< GRAB:  "grab" >
+    |< LETGO:  "letGo" >
+    |< NOP:  "nop" >
+    	
 }
 
 TOKEN:
@@ -126,7 +140,8 @@ TOKEN:
 {
 	< defproc: " defproc" >
 	|< defvar: " defvar" >
-	|< dir: ("north"|"south"|"east"|"west") >
+	|< O: ("north"|"south"|"east"|"west") >
+	|< D: ("front"|"right"|"left"|"back") >
 }
 
 
@@ -260,11 +275,31 @@ void gcommands():
 	{
 	}
 	{
-	  (command()|procedure()) 
+	  (ecommands()|procedure()) 
 	}
 
 /* structures */
 
+
+void ecommands():
+{
+  int x;
+  int y;
+
+}
+{
+  	<JUMP:  "jump">
+	|walk()
+	|<LEAP: "leap">
+	|<TURN: "turn">
+	|< TURNTO: "turnto" >
+	|<  DROP > "(" x = num() ")" { world.putChip(x); }
+    |< GRAB:  "grab" >
+    |< LETGO:  "letGo" >
+    |< NOP:  "nop" >
+	
+	|walk() 
+}
 void procedure():
 	{
 	  String id;
@@ -296,11 +331,11 @@ void vblockline():
 void conditional():
 	{
 	  boolean b;
-	  int dir;
+	  int O;
 	}
 	{
 	  b = not()(
-	    < facing > "("< dir >")"
+	    < facing > "("< O >")"
 		|< can >"("vblockline()")" { if (world.getPosition()) { return true;}}	  )
 	}
 
@@ -315,6 +350,29 @@ void controlstructure():
 
 //structures creation
 
+//Funciones
+void walk():
+{
+  int x;
+  String D = null;
+  String O = null;
+}
+{
+  < WALK >"(" x = num()( D = D() | O= O())?")"
+  { if (O != null )
+  	{ world.moveFoward(x);}
+  	else if ( D != null )
+  		{ for ( int i = 1; i <= x; i++)
+  			{ if ( j.equalsIgnoreCase("right")) {
+		  		world.right();}
+			  else if ( j.equalsIgnoreCase("left")) {
+		  		world.left();}
+		      else if ( j.equalsIgnoreCase("front")) {
+		  		world.up();}
+		      else { world.down(); }}}
+	else { world.moveFoward(x);}
+  }
+}
 
 //Helpers
 
@@ -412,4 +470,40 @@ boolean not():
 	{
 	  (< not >)? { b = true;}
 	  { return b;}
+	 }
+
+// retorne los numeros de direccion
+String O():
+	{
+	  String j;
+	}
+	{
+	  < O >
+	  { j= token.image;
+	  	int dir;
+	  	int facing = 10;
+
+		if ( j.equalsIgnoreCase("north")) {
+		  dir = 0;}
+		else if ( j.equalsIgnoreCase("south")) {
+		  dir = 1;}
+		else if ( j.equalsIgnoreCase("west")) {
+		  dir = 3;}
+		else { dir = 2; }
+
+		
+	  	while ( dir != facing) {
+	  	  world.turnRight();
+	  	  facing = world.getfacing(); }
+
+	  	return "posible";
+	 }
+
+String D():
+	{
+	  String j;
+	}
+	{
+	  
+	  < D > { j=token.image;return j; }
 	 }
