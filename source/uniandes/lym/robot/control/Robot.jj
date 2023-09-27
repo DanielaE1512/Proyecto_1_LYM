@@ -226,7 +226,7 @@ void vproc():
 	      	LV.put(params.get(i),null);
 	      }
 	    }
-	    ")"vblock() {
+	    ")"vblockc() {
 	    	proceduresVars.put(id,params);
 	    	proceduresLines.put(id,commads);
 	    }
