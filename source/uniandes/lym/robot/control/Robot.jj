@@ -223,17 +223,92 @@ void vproc():
 	  LV.clear();
 	}
 	{
-	  < defproc >id = name()"("params = getparams()")"vblockcc() {
+	  < defproc >id = name()"("params = getparams()")"commands = vblockc(params) {
 	    	proceduresVars.put(id,params);
 	    	proceduresLines.put(id,commads);
 	    }
 	}
 
-ArrayList vblockcc():
+ArrayList vblockc(ArrayList< String > params):
+	{
+	  ArrayList< String > comandos = new ArrayList< String >();
+	}
+	{
+	  "{"vblockline(comandos)(";"vblockline(comandos))*"}"
+	  { return comandos;}
+	}
+
+ArrayList vblocklinec(ArrayList< String > comandos, ArrayList< String > params):
 	{
 	}
 	{
+	  	(controlstructurec(comandos)
+	 	|vasignac(comandos)
+	 	|gcommandsc(comandos)
+	 	)
 	}
+
+void conditionalc(ArrayList< String > comandos):
+	{
+	  boolean b;
+	  int dir;
+	}
+	{
+		< not >{ comandos.add("not");}(
+	    < facing > { comandos.add("facing");}"("< dir >")" { }
+		|< can >{ comandos.add("can");}"("gcommandsc(comandos)")" 
+		)
+	}
+
+void gcommandsc(ArrayList< String > comandos):
+	{
+	}
+	{
+	  (command()|procedure()) 
+	}
+
+void controlstructurec(ArrayList< String > comandos):
+	{
+	  int x;
+	  String j;
+	  ArrayList< String > comandos2 = new ArrayList< String >();
+	}
+	{
+	 	(< IF > conditionalc(comandos) comandos2 = vblockc(){ comandos.add("if");
+	 		for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	< ELSE > comandos2 = vblockc() { comandos.add("else");
+	 		for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	|< WHILE >conditionalc(comandos) comandos2 = vblockc() { }
+	 	|< REPEAT >x=num() { comandos.add("repeat");comandos.add(Integer.toString(x));}< TIMES > comandos2 = vblockc() { comandos.add("times");
+			for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	|< REPEAT >j=name(){ comandos.add("repeat");comandos.add(j);}< TIMES > comandos2 = vblockc() { comandos.add("times");
+			for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	)
+	}
+
+void vasignac(ArrayList< String > comandos):
+	{
+	  String id,id2;
+	  int x;
+	}
+	{
+	  	id=name()"="x=num() { comandos.add(id); comandos.add("="); comandos.add(Integer.toString(x)); }
+		|id=name()"="id2=name() { comandos.add(id); comandos.add("="); comandos.add(id2); }
+	}
+
+
 
 
 /* Otras funciones*/
