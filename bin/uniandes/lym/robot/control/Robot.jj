@@ -213,6 +213,8 @@ void get() :
 
 /*basics */
 
+/* creando un pro */
+
 void vproc():
 	{
 	  String id;
@@ -221,16 +223,21 @@ void vproc():
 	  LV.clear();
 	}
 	{
-	  < defproc >id = name()"("params = getparams() {
-	    for (int i=0 ; i < params.size(); i++ ) {
-	      	LV.put(params.get(i),null);
-	      }
-	    }
-	    ")"vblockc() {
+	  < defproc >id = name()"("params = getparams()")"vblockcc() {
 	    	proceduresVars.put(id,params);
 	    	proceduresLines.put(id,commads);
 	    }
 	}
+
+ArrayList vblockcc():
+	{
+	}
+	{
+	}
+
+
+/* Otras funciones*/
+	
 
 void vvariable():
 	{
