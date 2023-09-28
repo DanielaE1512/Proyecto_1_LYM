@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*
 Gramatica para el Robot:
 Autor: Alejandro Arango
@@ -523,3 +524,5 @@ boolean checkp(ArrayList< String > params, String i):
 	{	  
 	}
 
+=======
+>>>>>>> branch 'master' of https://github.com/DanielaE1512/Proyecto_1_LYM.git
