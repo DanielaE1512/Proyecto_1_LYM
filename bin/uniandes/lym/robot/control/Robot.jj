@@ -226,7 +226,7 @@ void vproc():
 	{
 	  < defproc >id = name()"("params = getparams()")"commands = vblockc(params) {
 	    	proceduresVars.put(id,params);
-	    	proceduresLines.put(id,commads);
+	    	proceduresLines.put(id,commands);
 	    }
 	}
 
@@ -235,7 +235,7 @@ ArrayList vblockc(ArrayList< String > params):
 	  ArrayList< String > comandos = new ArrayList< String >();
 	}
 	{
-	  "{"vblockline(comandos)(";"vblockline(comandos))*"}"
+	  "{"vblocklinec(comandos)(";"vblocklinec(comandos))*"}"
 	  { return comandos;}
 	}
 
@@ -243,13 +243,13 @@ ArrayList vblocklinec(ArrayList< String > comandos, ArrayList< String > params):
 	{
 	}
 	{
-	  	(controlstructurec(comandos)
-	 	|vasignac(comandos)
-	 	|gcommandsc(comandos)
+	  	(controlstructurec(comandos, params)
+	 	|vasignac(comandos, params)
+	 	|gcommandsc(comandos, params)
 	 	)
 	}
 
-void conditionalc(ArrayList< String > comandos):
+void conditionalc(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	  boolean b;
 	  int dir;
@@ -257,41 +257,51 @@ void conditionalc(ArrayList< String > comandos):
 	{
 		< not >{ comandos.add("not");}(
 	    < facing > { comandos.add("facing");}"("< dir >")" { }
-		|< can >{ comandos.add("can");}"("gcommandsc(comandos)")" 
+		|< can >{ comandos.add("can");}"("gcommandsc(comandos,params)")" 
 		)
 	}
 
-void gcommandsc(ArrayList< String > comandos):
+void gcommandsc(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	}
 	{
 	  (command()|procedure()) 
 	}
 
-void controlstructurec(ArrayList< String > comandos):
+void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	  int x;
 	  String j;
+	  boolean b;
 	  ArrayList< String > comandos2 = new ArrayList< String >();
 	}
 	{
-	 	(< IF > conditionalc(comandos) comandos2 = vblockc(){ comandos.add("if");
+	 	(< IF > conditionalc(comandos, params) comandos2 = vblockc(params){ comandos.add("if");
 	 		for (String item : comandos2)
 	 		{
             	comandos.add(item);
         	}}
-	 	< ELSE > comandos2 = vblockc() { comandos.add("else");
+	 	< ELSE > comandos2 = vblockc(params) { comandos.add("else");
 	 		for (String item : comandos2)
 	 		{
             	comandos.add(item);
         	}}
-	 	|< WHILE >conditionalc(comandos) comandos2 = vblockc() { }
-	 	|< REPEAT >x=num() { comandos.add("repeat");comandos.add(Integer.toString(x));}< TIMES > comandos2 = vblockc() { comandos.add("times");
+	 	|< WHILE >conditionalc(comandos) comandos2 = vblockc(params) { }
+	 	|< REPEAT >x=num() { comandos.add("repeat");comandos.add(Integer.toString(x));}< TIMES > comandos2 = vblockc(params) { comandos.add("times");
 			for (String item : comandos2)
 	 		{
             	comandos.add(item);
         	}}
-	 	|< REPEAT >j=name(){ comandos.add("repeat");comandos.add(j);}< TIMES > comandos2 = vblockc() { comandos.add("times");
+	 	|< REPEAT >j=name(){
+	 	  	if(!(checkp(params,j)))
+	 	  	{
+	 	  	  throw new Error("Variable not found") ;
+	 	  	}
+	 	  	else {
+	 	  	  comandos.add("repeat");
+	 	  	  comandos.add(j);
+	 	  	}}
+	 	  	< TIMES > comandos2 = vblockc(params) { comandos.add("times");
 			for (String item : comandos2)
 	 		{
             	comandos.add(item);
@@ -305,7 +315,7 @@ void vasignac(ArrayList< String > comandos):
 	  int x;
 	}
 	{
-	  	id=name()"="x=num() { comandos.add(id); comandos.add("="); comandos.add(Integer.toString(x)); }
+	  	id=name()"=" < NUM > { x=Integer.parseInt(token.image); comandos.add(id); comandos.add("="); comandos.add(Integer.toString(x)); }
 		|id=name()"="id2=name() { comandos.add(id); comandos.add("="); comandos.add(id2); }
 	}
 
@@ -462,7 +472,7 @@ int paramsinit(ArrayList< String > params) throws Error:
 	     x = value(){id = params.get(i); i++; LV.put(id,x);}
 	    ("," x = value())* { id = params.get(i); i++; LV.put(id,x); }
 	  )?
-	  { if (params.length()-1 != i) { throw new Error("Number of parametres does not match the definition");}}
+	  { if (params.size()-1 != i) { throw new Error("Number of parametres does not match the definition");}}
 	}
 
 int value() throws Error:
@@ -499,5 +509,17 @@ boolean not():
 	  (< not >)? { b = true;}
 	  { return b;}
 	 }
-=======
->>>>>>> branch 'master' of https://github.com/DanielaE1512/Proyecto_1_LYM.git
+
+boolean checkp(ArrayList< String > params, String i):
+	{
+	  if (!(WV.containsKey(i) || params.contains(i))) {
+			return false;
+  	  }
+  	   
+  	  else {  
+		return true;
+  	  }
+	}
+	{	  
+	}
+
