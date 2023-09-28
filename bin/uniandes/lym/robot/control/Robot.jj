@@ -173,6 +173,7 @@ boolean command(Console sistema):
 			sistema.printOutput(salida);
 			return true;
 		})+
+		|script() { return true;} 
 	
 		| <EOF> {return false;} 
 	}
@@ -198,6 +199,15 @@ void get() :
 	}
 
 /*basics */
+
+void script():
+	{
+	}
+	{
+	  (vproc()
+	  |vblock()
+	  |vvariable()	  )
+	}
 
 /* creando un pro */
 
