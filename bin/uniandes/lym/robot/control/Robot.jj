@@ -121,7 +121,7 @@ TOKEN: /* Nombres de Comandos */
 
 TOKEN:
 {
-	<BALLOONS:  "BALLOONS" >65234
+	<BALLOONS:  "BALLOONS" >
 	|<CHIPS:     "CHIPS"  >	
 
 }
@@ -243,7 +243,7 @@ void vproc():
 	    }
 	    ")"vblock() {
 	    	proceduresVars.put(id,params);
-	    	proceduresLines.put(id,commads);
+	    	proceduresLines.put(id,commands);
 	    }
 	}
 
@@ -295,15 +295,16 @@ void ecommands():
 	|walk()
 	|leap()
 	|<TURN> "(" id=turn() ")"
-		{ if ( j.equalsIgnoreCase("right")) {
+		{ if ( id.equalsIgnoreCase("right")) {
 		  		world.turnRight();}
-			  else if ( j.equalsIgnoreCase("left")) {
-		  		world.turnLeft();}
+			  else if ( id.equalsIgnoreCase("left")) {
+		  		world.turnRight();
+		  		world.turnRight();}
 		      else { world.turnRight(); world.turnRight(); }}
 	|< TURNTO> "(" Orientation() ")"
 	|<  DROP > "(" x = num() ")" { world.putChips(x); }
 	|<  GET > "(" x = num() ")" { world.pickChips(x); }
-    |< GRAB > "(" x = num() ")" { world.pickBalloons(x); }
+    |< GRAB > "(" x = num() ")" { world.grabBalloons(x); }
     |< LETGO > "(" x = num() ")" { world.putBalloons(x); }
     |< NOP > "(" ")"
 	
@@ -340,12 +341,12 @@ void vblockline():
 void conditional():
 	{
 	  boolean b;
-	  int O;
+	  
 	}
 	{
 	  b = not()(
 	    < facing > "("< O >")"
-		|< can >"("vblockline()")" { if (world.getPosition()) { return true;}}	  )
+		|< can >"("vblockline()")" 	  )
 	}
 
 void controlstructure():
@@ -369,17 +370,17 @@ void walk():
 {
   < WALK >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
   { if (Ori != null )
-  	{ world.moveFoward(x,false);}
+  	{ world.moveForward(x,false);}
   	else if ( Dir != null )
   		{ for ( int i = 1; i <= x; i++)
-  			{ if ( j.equalsIgnoreCase("right")) {
+  			{ if ( Dir.equalsIgnoreCase("right")) {
 		  		world.right();}
-			  else if ( j.equalsIgnoreCase("left")) {
+			  else if ( Dir.equalsIgnoreCase("left")) {
 		  		world.left();}
-		      else if ( j.equalsIgnoreCase("front")) {
+		      else if ( Dir.equalsIgnoreCase("front")) {
 		  		world.up();}
 		      else { world.down(); }}}
-	else { world.moveFoward(x,false);}
+	else { world.moveForward(x,false);}
   }
 }
 
@@ -391,18 +392,18 @@ void leap():
 }
 {
   < LEAP >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
-  { if (Or!= null )
-  	{ world.moveFoward(x,true);}
+  { if (Ori!= null )
+  	{ world.moveForward(x,true);}
   	else if ( Dir != null )
   		{ for ( int i = 1; i <= x; i++)
-  			{ if ( j.equalsIgnoreCase("right")) {
+  			{ if ( Dir.equalsIgnoreCase("right")) {
 		  		world.right();}
-			  else if ( j.equalsIgnoreCase("left")) {
+			  else if ( Dir.equalsIgnoreCase("left")) {
 		  		world.left();}
-		      else if ( j.equalsIgnoreCase("front")) {
+		      else if ( Dir.equalsIgnoreCase("front")) {
 		  		world.up();}
 		      else { world.down(); }}}
-	else { world.moveFoward(x,true);}
+	else { world.moveForward(x,true);}
   }
 }
 
@@ -467,6 +468,7 @@ int paramsinit(ArrayList< String > params):
 	     x = value(){id = params.get(i); i++; LV.put(id,x);}
 	    ("," x = value())* { id = params.get(i); i++; LV.put(id,x); }
 	  )?
+	  { if (params.size()-1 != i) { throw new Error ("Number of paramet");}}
 	}
 
 int value() throws Error:
@@ -526,7 +528,7 @@ String Orientation():
 		
 	  	while ( dir != facing) {
 	  	  world.turnRight();
-	  	  facing = world.getfacing(); }
+	  	  facing = world.getFacing(); }
 
 	  	return "posible";
 	 } }
