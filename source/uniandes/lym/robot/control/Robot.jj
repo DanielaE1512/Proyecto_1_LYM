@@ -126,8 +126,8 @@ TOKEN :
 /* Palabras reservadas */
 TOKEN:
 {
-	< defproc: " defproc" >
-	|< defvar: " defvar" >
+	< defproc: "defproc" >
+	|< defvar: "defvar" >
 	|< dir: ("north"|"south"|"east"|"west") >
 }
 
@@ -231,7 +231,7 @@ void script():
 
 void vproc():
 	{
-	  String id;
+	  String id = null;
 	  ArrayList< String > params = new ArrayList< String >();
 	  ArrayList< String > commands = new ArrayList< String >();
 	  LV.clear();
@@ -277,7 +277,58 @@ void gcommandsc(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	}
 	{
-	  (ecommands()|procedure()) 
+	  (ecommandsc(comandos, params)|procedure()) 
+	}
+
+void ecommandsc(ArrayList< String > comandos,ArrayList< String > params) throws Error:
+	{
+	  String x = null;
+	  String y = null;
+	  ArrayList<String> directions = new ArrayList<String>();
+        
+	  directions.add("front");
+	  directions.add("right");
+	  directions.add("left");
+	  directions.add("north");
+	  directions.add("south");
+	  directions.add("west");
+	  directions.add("east");
+
+	  ArrayList<String> orientation = new ArrayList<String>();
+      orientation.add("left");
+      orientation.add("right");
+      orientation.add("around");
+
+      ArrayList<String> tur = new ArrayList<String>();
+        
+      tur.add("north");
+      tur.add("south");
+      tur.add("east");
+      tur.add("west");
+	  
+	}
+	{
+	  <JUMP> "("(x = name()| < NUM > )"," y = name() ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)) && (params.contains(y)|| WV.containsKey(y)))) { throw new Error("Variables not define");}}
+		| < WALK > "(" x=name() ("," y=name())?")"{
+		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
+		 {	throw new Error("Variables not define");}
+		 else if (y != null && !directions.contains(y)) {
+		   throw new Error("Wrong parameter");
+		   } }
+		|< LEAP > "(" (x=name()| < NUM >) ("," y=name())?")"{
+		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
+		 {	throw new Error("Variables not define");}
+		 else if (y != null && !directions.contains(y)) {
+		   throw new Error("Wrong parameter");
+		   } }
+		|<TURN> "(" x=name() ")"{ if(!(orientation.contains(x))) { throw new Error("Wrong parameter");}}
+		|< TURNTO> "(" x=name() ")" { if(!(tur.contains(x))) { throw new Error("Wrong parameter");}}
+		|<  DROP > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
+		|<  GET > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
+	    |< GRAB > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
+	    |< LETGO > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
+	    |< NOP > "(" ")"
+	  
 	}
 
 void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
@@ -387,7 +438,7 @@ void ecommands():
 	
 	}
 	{
-	  	<JUMP> "("x = num()"," y = num() ")" { world.setPostion(x,y);}
+	  	<JUMP> "("x = value()"," y = value() ")" { world.setPostion(x,y);}
 		|walk()
 		|leap()
 		|<TURN> "(" id=turn() ")"
@@ -616,6 +667,7 @@ boolean checkp(ArrayList< String > params, String i):
 		return true;
   	  } }
 	}
+	
 
 // retorne los numeros de direccion
 String Orientation():
