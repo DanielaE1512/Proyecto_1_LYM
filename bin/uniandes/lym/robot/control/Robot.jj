@@ -1,4 +1,6 @@
-options 
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options 
 {
 	LOOKAHEAD = 1; 
 	IGNORE_CASE = true;
@@ -86,7 +88,20 @@ TOKEN: /* Nombres de Comandos */
 	|<PICK: "Pick">
 	|< POP: "Pop" >
 	|<GO: "GO" >
-    |< HOP:  "HOP" >		
+    |< HOP:  "HOP" >
+    |<JUMP: "jump">
+    |<TURN: "turn">
+	|< TURNTO: "turnto">
+	|<  DROP: "drop" >
+	|<  GET:"get" >
+	|< GRAB: "grab" >
+	|< LETGO: "letgo" >
+	|< NOP: "nop" >
+	|< WALK: "walk" >
+	|< LEAP: "leap" >
+	|< O: "north"|"south"|"west"|"east" >
+	|< D: "front"|"right"|"left"|"back" >
+	|< dirct: "left"|"right"|"around" >		
 
 }
 
@@ -144,6 +159,9 @@ TOKEN:
 //boolean command(uniandes.lym.robot.view.Console sistema) :
 
 
+//boolean command(uniandes.lym.robot.view.Console sistema) :
+
+
 boolean command(Console sistema):
 	{	
 		
@@ -153,7 +171,8 @@ boolean command(Console sistema):
 	
 	
 	{
-		(		  (
+		(
+		  (
 		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
 		| <MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
 		| <HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
@@ -206,7 +225,8 @@ void script():
 	{
 	  (vproc()
 	  |vblock()
-	  |vvariable()	  )
+	  |vvariable()
+	  )
 	}
 
 /* creando un pro */
@@ -350,7 +370,7 @@ void gcommands():
 	{
 	}
 	{
-	  (command()|procedure()) 
+	  (ecommands()|procedure()) 
 	}
 
 /* structures & commands */
@@ -360,7 +380,7 @@ void ecommands():
 	{
 	  int x;
 	  int y;
-	  String id;
+	  String id,j;
 	
 	}
 	{
@@ -419,14 +439,16 @@ void conditional():
 	{
 	  b = not()(
 	    < facing > "("< dir >")"
-		|< can >"("vblockline()")" { if (world.getPosition()) { return true;}}	  )
+		|< can >"("vblockline()")" { if (world.getPosition()) { return true;}}
+	  )
 	}
 
 void controlstructure():
 	{
 	}
 	{
-	 	(	 	  < IF >conditional()vblock()< ELSE >vblock()
+	 	(
+	 	  < IF >conditional()vblock()< ELSE >vblock()
 	 	|< WHILE >conditional()vblock()
 	 	|< REPEAT >value()< TIMES >vblock() )
 	}
@@ -523,7 +545,8 @@ ArrayList getparams():
 	  String id,id2 = null;
 	}
 	{
-	  (	    id = name(){params.add(id);}
+	  (
+	    id = name(){params.add(id);}
 	    ("," id2 = name())* { params.add(id2); }
 	  )?
 	  { return params;}
@@ -580,15 +603,16 @@ boolean not():
 
 boolean checkp(ArrayList< String > params, String i):
 	{
-	  if (!(WV.containsKey(i) || params.contains(i))) {
+	}
+	{
+	 {
+	   if (!(WV.containsKey(i) || params.contains(i))) {
 			return false;
   	  }
   	   
   	  else {  
 		return true;
-  	  }
-	}
-	{	  
+  	  } }
 	}
 
 // retorne los numeros de direccion
@@ -634,4 +658,3 @@ String turn():
 	}
 
 /* FIN */
-
