@@ -1,7 +1,7 @@
-
 /**
  * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
- */options 
+ */
+options 
 {
 	LOOKAHEAD = 1; 
 	IGNORE_CASE = true;
@@ -160,9 +160,6 @@ TOKEN:
 //boolean command(uniandes.lym.robot.view.Console sistema) :
 
 
-//boolean command(uniandes.lym.robot.view.Console sistema) :
-
-
 boolean command(Console sistema):
 	{	
 		
@@ -255,7 +252,7 @@ ArrayList vblockc(ArrayList< String > params):
 	  { return comandos;}
 	}
 
-ArrayList vblocklinec(ArrayList< String > comandos, ArrayList< String > params):
+void vblocklinec(ArrayList< String > comandos, ArrayList< String > params):
 	{
 	}
 	{
@@ -268,7 +265,6 @@ ArrayList vblocklinec(ArrayList< String > comandos, ArrayList< String > params):
 void conditionalc(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	  boolean b;
-	  int dir;
 	}
 	{
 		< not >{ comandos.add("not");}(
@@ -281,13 +277,13 @@ void gcommandsc(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	}
 	{
-	  (command()|procedure()) 
+	  (ecommands()|procedure()) 
 	}
 
 void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
 	{
-	  int x;
-	  String j;
+	  Integer x = null;
+	  String j = null;
 	  boolean b;
 	  ArrayList< String > comandos2 = new ArrayList< String >();
 	}
@@ -302,22 +298,25 @@ void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
 	 		{
             	comandos.add(item);
         	}}
-	 	|< WHILE >conditionalc(comandos) comandos2 = vblockc(params) { }
-	 	|< REPEAT >x=num() { comandos.add("repeat");comandos.add(Integer.toString(x));}< TIMES > comandos2 = vblockc(params) { comandos.add("times");
-			for (String item : comandos2)
-	 		{
-            	comandos.add(item);
-        	}}
-	 	|< REPEAT >j=name(){
-	 	  	if(!(checkp(params,j)))
-	 	  	{
-	 	  	  throw new Error("Variable not found") ;
-	 	  	}
-	 	  	else {
-	 	  	  comandos.add("repeat");
+	 	|< WHILE >conditionalc(comandos, params) comandos2 = vblockc(params) { }
+	 	|< REPEAT >(j=name()|x=num()) {
+	 	  	
+	 	   comandos.add("repeat");
+	 	   if(checkp(params,j))
+	 	   	{
+	 	   	  comandos.add("repeat");
 	 	  	  comandos.add(j);
-	 	  	}}
-	 	  	< TIMES > comandos2 = vblockc(params) { comandos.add("times");
+	 	   	 }
+	 	   else if(x != null )
+	 	   	{
+	 	   	  comandos.add(Integer.toString(x));
+	 	   	  
+	 	   	 }
+	 	   else {throw new Error("Variable not found") ;}
+	 	   
+	 	   }
+	 	   < TIMES > comandos2 = vblockc(params) {
+	 	    comandos.add("times");
 			for (String item : comandos2)
 	 		{
             	comandos.add(item);
@@ -325,14 +324,17 @@ void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
 	 	)
 	}
 
-void vasignac(ArrayList< String > comandos):
+void vasignac(ArrayList< String > comandos, ArrayList< String > params):
 	{
-	  String id,id2;
-	  int x;
+	  String id,id2 = null;
+	  Integer x = null;
 	}
 	{
-	  	id=name()"=" < NUM > { x=Integer.parseInt(token.image); comandos.add(id); comandos.add("="); comandos.add(Integer.toString(x)); }
-		|id=name()"="id2=name() { comandos.add(id); comandos.add("="); comandos.add(id2); }
+	  	id=name()"="( id2=name()|x=num()){
+	  	  comandos.add(id);
+	  	  comandos.add("=");
+	  	  if (id2 != null) { comandos.add(id2);}
+	  	  else { comandos.add(String.valueOf(x));}}
 	}
 
 
@@ -389,15 +391,15 @@ void ecommands():
 		|walk()
 		|leap()
 		|<TURN> "(" id=turn() ")"
-			{ if ( j.equalsIgnoreCase("right")) {
+			{ if ( id.equalsIgnoreCase("right")) {
 			  		world.turnRight();}
-				  else if ( j.equalsIgnoreCase("left")) {
-			  		world.turnLeft();}
+				  else if ( id.equalsIgnoreCase("left")) {
+			  		world.turnRight();world.turnRight();}
 			      else { world.turnRight(); world.turnRight(); }}
 		|< TURNTO> "(" Orientation() ")"
 		|<  DROP > "(" x = num() ")" { world.putChips(x); }
 		|<  GET > "(" x = num() ")" { world.pickChips(x); }
-	    |< GRAB > "(" x = num() ")" { world.pickBalloons(x); }
+	    |< GRAB > "(" x = num() ")" { world.grabBalloons(x); }
 	    |< LETGO > "(" x = num() ")" { world.putBalloons(x); }
 	    |< NOP > "(" ")"
 		
@@ -435,12 +437,11 @@ void vblockline():
 void conditional():
 	{
 	  boolean b;
-	  int dir;
 	}
 	{
 	  b = not()(
 	    < facing > "("< dir >")"
-		|< can >"("vblockline()")" { if (world.getPosition()) { return true;}}
+		|< can >"("vblockline()")"
 	  )
 	}
 
@@ -465,17 +466,17 @@ void walk():
 	{
 	  < WALK >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
 	  { if (Ori != null )
-	  	{ world.moveFoward(x,false);}
+	  	{ world.moveForward(x,false);}
 	  	else if ( Dir != null )
 	  		{ for ( int i = 1; i <= x; i++)
-	  			{ if ( j.equalsIgnoreCase("right")) {
+	  			{ if ( Dir.equalsIgnoreCase("right")) {
 			  		world.right();}
-				  else if ( j.equalsIgnoreCase("left")) {
+				  else if ( Dir.equalsIgnoreCase("left")) {
 			  		world.left();}
-			      else if ( j.equalsIgnoreCase("front")) {
+			      else if ( Dir.equalsIgnoreCase("front")) {
 			  		world.up();}
 			      else { world.down(); }}}
-		else { world.moveFoward(x,false);}
+		else { world.moveForward(x,false);}
 	  }
 	}
 
@@ -487,18 +488,18 @@ void leap():
 	}
 	{
 	  < LEAP >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
-	  { if (Or!= null )
-	  	{ world.moveFoward(x,true);}
+	  { if (Ori!= null )
+	  	{ world.moveForward(x,true);}
 	  	else if ( Dir != null )
 	  		{ for ( int i = 1; i <= x; i++)
-	  			{ if ( j.equalsIgnoreCase("right")) {
+	  			{ if ( Dir.equalsIgnoreCase("right")) {
 			  		world.right();}
-				  else if ( j.equalsIgnoreCase("left")) {
+				  else if ( Dir.equalsIgnoreCase("left")) {
 			  		world.left();}
-			      else if ( j.equalsIgnoreCase("front")) {
+			      else if ( Dir.equalsIgnoreCase("front")) {
 			  		world.up();}
 			      else { world.down(); }}}
-		else { world.moveFoward(x,true);}
+		else { world.moveForward(x,true);}
 	  }
 	}
 
@@ -638,7 +639,7 @@ String Orientation():
 		
 	  	while ( dir != facing) {
 	  	  world.turnRight();
-	  	  facing = world.getfacing(); }
+	  	  facing = world.getFacing(); }
 
 	  	return "posible";
 	 } }

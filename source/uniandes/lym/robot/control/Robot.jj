@@ -1,0 +1,662 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+options 
+{
+	LOOKAHEAD = 1; 
+	IGNORE_CASE = true;
+	STATIC = false;	
+}
+   
+
+PARSER_BEGIN(Robot)
+
+package uniandes.lym.robot.control;
+
+import uniandes.lym.robot.kernel.*;
+import uniandes.lym.robot.view.Console;
+ 
+import java.awt.Point;
+import java.io.*;
+import java.util.Vector;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+@SuppressWarnings("serial")
+public class Robot 
+{
+
+
+	private RobotWorldDec world;
+	
+	
+	void setWorld(RobotWorld w) {
+		world = (RobotWorldDec) w;	
+	}
+
+	/*Mapa que tiene la estructura:
+		key: nombre de la variable global.
+		value: valor de dicha variable global.
+	*/
+
+	HashMap<String, Integer> WV = new HashMap<String, Integer>();
+
+	/*Mapa que tiene la estructura:
+		key: nombre de la variable local.
+		value: valor de dicha variable local.
+	*/
+	HashMap<String, Integer> LV = new HashMap<String, Integer>();
+
+	/* Mapa donde que tiene la estructura:
+		key : nombre de un procedimiento declarado.
+		value: listas que contienen los strings de las variables declaradas para el procedimiento.
+	*/
+	HashMap<String, ArrayList> proceduresVars = new HashMap<String, ArrayList>();
+	
+	/* Mapa que tiene la estructura:
+		key: nombre de un procedimiento.
+		value: mapas que cumplen la structura:
+			key : strings de los comandos o procedimientos que se ejecutan.
+			value: lista de los strigns ordenados que se usan como parametro en los comandos o procedimientos.
+	*/
+	HashMap<String, HashMap <String, ArrayList> > proceduresE = new HashMap<String,  HashMap <String, ArrayList>>();
+
+	/* Mapa que tiene la estructura:
+		key: nombre de un procedimiento.
+		value: nombre de los comandos usados dentro del procedimiento de manera ordenada.
+	*/
+	HashMap<String, ArrayList< String > > proceduresLines = new HashMap<String, ArrayList< String > >();
+	
+	String salida=new String();
+}
+PARSER_END(Robot)
+
+SKIP:
+{
+	" "
+	|"\r"
+	|"\t"
+	|"\n"
+}
+
+TOKEN: /* Nombres de Comandos */
+{
+
+	<MOV:  "Mov">
+	|<RIGHT: "RIGHT">
+	|<PUT: "Put">
+	|<PICK: "Pick">
+	|< POP: "Pop" >
+	|<GO: "GO" >
+    |< HOP:  "HOP" >
+    |<JUMP: "jump">
+    |<TURN: "turn">
+	|< TURNTO: "turnto">
+	|<  DROP: "drop" >
+	|<  GET:"get" >
+	|< GRAB: "grab" >
+	|< LETGO: "letgo" >
+	|< NOP: "nop" >
+	|< WALK: "walk" >
+	|< LEAP: "leap" >
+	|< O: "north"|"south"|"west"|"east" >
+	|< D: "front"|"right"|"left"|"back" >
+	|< dirct: "left"|"right"|"around" >		
+
+}
+
+TOKEN:
+{
+	<BALLOONS:  "BALLOONS" >
+	|<CHIPS:     "CHIPS"  >	
+
+}
+
+
+
+TOKEN :
+{
+	<NUM: (<DIGIT>)+ >
+	|  	<#DIGIT: ["0"-"9"] >
+        
+}
+
+
+/* Palabras reservadas */
+TOKEN:
+{
+	< defproc: " defproc" >
+	|< defvar: " defvar" >
+	|< dir: ("north"|"south"|"east"|"west") >
+}
+
+
+/* Condicionales */
+TOKEN:
+{
+	< facing: "facing" >
+	|< can: "can" >
+	|< not: "not" > 
+}
+
+/* estructuras de control */
+TOKEN:
+{
+	< IF: "if">
+	|< ELSE: "esle">
+	|< WHILE: "while">
+	|< REPEAT: "repeat">
+	|< TIMES: "times">
+}
+
+TOKEN:
+{
+  	< NAME: < LETRA >(< LETRA >|< NUM >)*  >
+	| < #LETRA : ["a"-"z"]> 
+}
+
+
+//boolean command(uniandes.lym.robot.view.Console sistema) :
+
+
+boolean command(Console sistema):
+	{	
+		
+		int x,y;
+		salida=new String();	
+	}
+	
+	
+	{
+		(
+		  (
+		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
+		| <MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+		| <HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
+		| <GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
+		| <PUT> "("  put() ")"					  			
+		| <PICK> "(" get()  ")"	
+	    | < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		) ";" 
+	
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		})+
+		|script() { return true;} 
+	
+		| <EOF> {return false;} 
+	}
+
+void put() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
+		|( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+	
+	}
+
+void get() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+	
+	}
+
+/*basics */
+
+void script():
+	{
+	}
+	{
+	  (vproc()
+	  |vblock()
+	  |vvariable()
+	  )
+	}
+
+/* creando un pro */
+
+void vproc():
+	{
+	  String id;
+	  ArrayList< String > params = new ArrayList< String >();
+	  ArrayList< String > commands = new ArrayList< String >();
+	  LV.clear();
+	}
+	{
+	  < defproc >id = name()"("params = getparams()")"commands = vblockc(params) {
+	    	proceduresVars.put(id,params);
+	    	proceduresLines.put(id,commands);
+	    }
+	}
+
+ArrayList vblockc(ArrayList< String > params):
+	{
+	  ArrayList< String > comandos = new ArrayList< String >();
+	}
+	{
+	  "{"vblocklinec(comandos,params)(";"vblocklinec(comandos,params))*"}"
+	  { return comandos;}
+	}
+
+void vblocklinec(ArrayList< String > comandos, ArrayList< String > params):
+	{
+	}
+	{
+	  	(controlstructurec(comandos, params)
+	 	|vasignac(comandos, params)
+	 	|gcommandsc(comandos, params)
+	 	)
+	}
+
+void conditionalc(ArrayList< String > comandos,ArrayList< String > params):
+	{
+	  boolean b;
+	}
+	{
+		< not >{ comandos.add("not");}(
+	    < facing > { comandos.add("facing");}"("< dir >")" { }
+		|< can >{ comandos.add("can");}"("gcommandsc(comandos,params)")" 
+		)
+	}
+
+void gcommandsc(ArrayList< String > comandos,ArrayList< String > params):
+	{
+	}
+	{
+	  (ecommands()|procedure()) 
+	}
+
+void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
+	{
+	  Integer x = null;
+	  String j = null;
+	  boolean b;
+	  ArrayList< String > comandos2 = new ArrayList< String >();
+	}
+	{
+	 	(< IF > conditionalc(comandos, params) comandos2 = vblockc(params){ comandos.add("if");
+	 		for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	< ELSE > comandos2 = vblockc(params) { comandos.add("else");
+	 		for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	|< WHILE >conditionalc(comandos, params) comandos2 = vblockc(params) { }
+	 	|< REPEAT >(j=name()|x=num()) {
+	 	  	
+	 	   comandos.add("repeat");
+	 	   if(checkp(params,j))
+	 	   	{
+	 	   	  comandos.add("repeat");
+	 	  	  comandos.add(j);
+	 	   	 }
+	 	   else if(x != null )
+	 	   	{
+	 	   	  comandos.add(Integer.toString(x));
+	 	   	  
+	 	   	 }
+	 	   else {throw new Error("Variable not found") ;}
+	 	   
+	 	   }
+	 	   < TIMES > comandos2 = vblockc(params) {
+	 	    comandos.add("times");
+			for (String item : comandos2)
+	 		{
+            	comandos.add(item);
+        	}}
+	 	)
+	}
+
+void vasignac(ArrayList< String > comandos, ArrayList< String > params):
+	{
+	  String id,id2 = null;
+	  Integer x = null;
+	}
+	{
+	  	id=name()"="( id2=name()|x=num()){
+	  	  comandos.add(id);
+	  	  comandos.add("=");
+	  	  if (id2 != null) { comandos.add(id2);}
+	  	  else { comandos.add(String.valueOf(x));}}
+	}
+
+
+
+
+/* Otras funciones*/
+	
+
+void vvariable():
+	{
+	  String id;
+	  int x;
+	}
+	{
+	  < defvar >id=name()x=value() { WV.put(id,x); }
+	}
+
+void vasigna():
+	{
+	  String id;
+	  int x;
+	}
+	{
+	  id=name()"="x=value() {
+	    if (WV.containsKey(id)) {
+			WV.put(id,x);
+	      }
+	      
+	    else if (LV.containsKey(id)) {
+			LV.put(id,x);
+	      }
+	    }
+	}
+
+void gcommands():
+	{
+	}
+	{
+	  (ecommands()|procedure()) 
+	}
+
+/* structures & commands */
+
+
+void ecommands():
+	{
+	  int x;
+	  int y;
+	  String id,j;
+	
+	}
+	{
+	  	<JUMP> "("x = num()"," y = num() ")" { world.setPostion(x,y);}
+		|walk()
+		|leap()
+		|<TURN> "(" id=turn() ")"
+			{ if ( id.equalsIgnoreCase("right")) {
+			  		world.turnRight();}
+				  else if ( id.equalsIgnoreCase("left")) {
+			  		world.turnRight();world.turnRight();}
+			      else { world.turnRight(); world.turnRight(); }}
+		|< TURNTO> "(" Orientation() ")"
+		|<  DROP > "(" x = num() ")" { world.putChips(x); }
+		|<  GET > "(" x = num() ")" { world.pickChips(x); }
+	    |< GRAB > "(" x = num() ")" { world.grabBalloons(x); }
+	    |< LETGO > "(" x = num() ")" { world.putBalloons(x); }
+	    |< NOP > "(" ")"
+		
+	}
+	
+void procedure():
+	{
+	  String id;
+	  ArrayList< String > params = new ArrayList< String >();
+	}
+	{
+	  (
+	    id = name() {if (proceduresE.containsKey(id)) { params = proceduresVars.get(id); }}"("paramsinit(params)")"
+	  )
+	}
+
+void vblock():
+	{
+	}
+	{
+	  "{"vblockline()(";"vblockline())*"}" 
+	}
+
+
+void vblockline():
+	{
+	}
+	{
+	 	(controlstructure()
+	 	|vasigna()
+	 	|gcommands()
+	 	)
+	}
+
+void conditional():
+	{
+	  boolean b;
+	}
+	{
+	  b = not()(
+	    < facing > "("< dir >")"
+		|< can >"("vblockline()")"
+	  )
+	}
+
+void controlstructure():
+	{
+	}
+	{
+	 	(
+	 	  < IF >conditional()vblock()< ELSE >vblock()
+	 	|< WHILE >conditional()vblock()
+	 	|< REPEAT >value()< TIMES >vblock() )
+	}
+
+
+//Funciones
+void walk():
+	{
+	  int x;
+	  String Dir = null;
+	  String Ori = null;
+	}
+	{
+	  < WALK >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
+	  { if (Ori != null )
+	  	{ world.moveForward(x,false);}
+	  	else if ( Dir != null )
+	  		{ for ( int i = 1; i <= x; i++)
+	  			{ if ( Dir.equalsIgnoreCase("right")) {
+			  		world.right();}
+				  else if ( Dir.equalsIgnoreCase("left")) {
+			  		world.left();}
+			      else if ( Dir.equalsIgnoreCase("front")) {
+			  		world.up();}
+			      else { world.down(); }}}
+		else { world.moveForward(x,false);}
+	  }
+	}
+
+void leap():
+	{
+	  int x;
+	  String Dir = null;
+	  String Ori = null;
+	}
+	{
+	  < LEAP >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
+	  { if (Ori!= null )
+	  	{ world.moveForward(x,true);}
+	  	else if ( Dir != null )
+	  		{ for ( int i = 1; i <= x; i++)
+	  			{ if ( Dir.equalsIgnoreCase("right")) {
+			  		world.right();}
+				  else if ( Dir.equalsIgnoreCase("left")) {
+			  		world.left();}
+			      else if ( Dir.equalsIgnoreCase("front")) {
+			  		world.up();}
+			      else { world.down(); }}}
+		else { world.moveForward(x,true);}
+	  }
+	}
+
+
+//Helpers
+
+/**
+ * Unsigned decimal number
+ * @return the corresponding value of the string
+ * @error  corresponding value is too large
+ */
+
+int num() throws Error:
+	{	
+		int total=1;
+	}
+	{
+		<NUM>
+		{
+			try 
+			{
+				total = Integer.parseInt(token.image);
+			} 
+			catch (NumberFormatException ee) 
+			{
+				throw new Error("Number out of bounds: "+token.image+" !!");
+			}
+			return total;
+		}
+	}
+
+String name():
+	{
+	}
+	{
+	  < NAME >
+	  {
+	    return new String(token.image);
+	   }
+	}
+
+ArrayList getparams():
+	{
+	  ArrayList< String > params = new ArrayList< String >();
+	  String id,id2 = null;
+	}
+	{
+	  (
+	    id = name(){params.add(id);}
+	    ("," id2 = name())* { params.add(id2); }
+	  )?
+	  { return params;}
+	}
+
+int paramsinit(ArrayList< String > params) throws Error:
+	{
+	  int i,x;
+	  i = 0;
+	  String id;
+	}
+	{
+	  (
+	     x = value(){id = params.get(i); i++; LV.put(id,x);}
+	    ("," x = value())* { id = params.get(i); i++; LV.put(id,x); }
+	  )?
+	  { if (params.size()-1 != i) { throw new Error("Number of parametres does not match the definition");}}
+	}
+
+int value() throws Error:
+	{
+	  String i;
+	  int x;
+	}
+	{
+	  (	< NAME >
+		  	{  i = token.image;
+		  	
+			  	if (!(WV.containsKey(i) || LV.containsKey(i))) {
+						throw new Error("Variable not found");
+			  	  }
+			  	   
+			  	else if (WV.containsKey(i)) {  
+					x = WV.get(i);
+			  	  }
+			  	  
+			  	else {
+			  	  	x = LV.get(i);
+			  	  }  
+		  	}
+	 	|x = num()
+	 	{ return x;}
+	  )
+	}
+
+boolean not():
+	{
+	  boolean b = false;
+	}
+	{
+	  (< not >)? { b = true;}
+	  { return b;}
+	 }
+
+boolean checkp(ArrayList< String > params, String i):
+	{
+	}
+	{
+	 {
+	   if (!(WV.containsKey(i) || params.contains(i))) {
+			return false;
+  	  }
+  	   
+  	  else {  
+		return true;
+  	  } }
+	}
+
+// retorne los numeros de direccion
+String Orientation():
+	{
+	  String j;
+	}
+	{
+	  < O >
+	  { j= token.image;
+	  	int dir;
+	  	int facing = 10;
+
+		if ( j.equalsIgnoreCase("north")) {
+		  dir = 0;}
+		else if ( j.equalsIgnoreCase("south")) {
+		  dir = 1;}
+		else if ( j.equalsIgnoreCase("west")) {
+		  dir = 3;}
+		else { dir = 2; }
+
+		
+	  	while ( dir != facing) {
+	  	  world.turnRight();
+	  	  facing = world.getFacing(); }
+
+	  	return "posible";
+	 } }
+
+String Direccion():
+	{
+	  String j;
+	}
+	{
+	  
+	  < D > { j=token.image;return j; }
+	 }
+
+String turn():
+	{}
+	{
+	  < dirct > { return token.image; }
+	}
+
+/* FIN */
