@@ -194,7 +194,7 @@ void get() :
 	}
 	{
 		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
-		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+		|( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
 	
 	}
 
@@ -353,7 +353,7 @@ void gcommands():
 	  (command()|procedure()) 
 	}
 
-/* structures */
+/* structures & commands */
 
 
 void ecommands():
@@ -629,8 +629,9 @@ String Direccion():
 
 String turn():
 	{}
-	{ < dirct > { return token.image; }
-	  }
+	{
+	  < dirct > { return token.image; }
+	}
 
 /* FIN */
 
