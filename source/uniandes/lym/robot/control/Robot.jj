@@ -309,18 +309,15 @@ void ecommandsc(ArrayList< String > comandos,ArrayList< String > params) throws 
 	}
 	{
 	  <JUMP> "("(x = name()| < NUM > )"," y = name() ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)) && (params.contains(y)|| WV.containsKey(y)))) { throw new Error("Variables not define");}}
-		| < WALK > "(" x=name() ("," y=name())?")"{
+		| < WALK > "(" x=name() ("," (< O >| < D >))?")"{
 		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
-		 {	throw new Error("Variables not define");}
-		 else if (y != null && !directions.contains(y)) {
-		   throw new Error("Wrong parameter");
-		   } }
-		|< LEAP > "(" (x=name()| < NUM >) ("," y=name())?")"{
+		 {	throw new Error("Variables not define");} }
+		 
+		   
+		|< LEAP > "(" (x=name()| < NUM >) ("," (< O > | < D >))?")"{
 		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
-		 {	throw new Error("Variables not define");}
-		 else if (y != null && !directions.contains(y)) {
-		   throw new Error("Wrong parameter");
-		   } }
+		 {	throw new Error("Variables not define");} }
+		 
 		|<TURN> "(" x=name() ")"{ if(!(orientation.contains(x))) { throw new Error("Wrong parameter");}}
 		|< TURNTO> "(" x=name() ")" { if(!(tur.contains(x))) { throw new Error("Wrong parameter");}}
 		|<  DROP > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
@@ -448,10 +445,10 @@ void ecommands():
 			  		world.turnRight();world.turnRight();}
 			      else { world.turnRight(); world.turnRight(); }}
 		|< TURNTO> "(" Orientation() ")"
-		|<  DROP > "(" x = num() ")" { world.putChips(x); }
-		|<  GET > "(" x = num() ")" { world.pickChips(x); }
-	    |< GRAB > "(" x = num() ")" { world.grabBalloons(x); }
-	    |< LETGO > "(" x = num() ")" { world.putBalloons(x); }
+		|<  DROP > "(" x = value() ")" { world.putChips(x); }
+		|<  GET > "(" x = value() ")" { world.pickChips(x); }
+	    |< GRAB > "(" x = value() ")" { world.grabBalloons(x); }
+	    |< LETGO > "(" x = value() ")" { world.putBalloons(x); }
 	    |< NOP > "(" ")"
 		
 	}
@@ -467,6 +464,15 @@ void procedure():
 	  )
 	}
 
+// Para verificar condicional que no se ejecuta
+void vblockconditional():
+	{
+	}
+	{
+	  "{"vcommandsconditional()(";"vcommandsconditional())*"}" 
+	}
+
+// Realizar el resto de acciones
 void vblock():
 	{
 	}
@@ -485,23 +491,58 @@ void vblockline():
 	 	)
 	}
 
-void conditional():
+boolean conditional():
 	{
 	  boolean b;
+	  boolean m;
+	  boolean resultado;
 	}
 	{
 	  b = not()(
-	    < facing > "("< dir >")"
+	    < facing > "("m=cfacing()")" { if ( b)
+	    								{ if(m ) { resultado = false;}
+	    								  else { resultado=true; } }
+	    							    else { if(m ) { resultado = true;}
+	    								  else { resultado=false; } }}
+
+	    
 		|< can >"("vblockline()")"
+		
+		  
 	  )
+	  { return resultado; }
+	}
+
+void vcommandsconditional() :
+	{
+	
+	  
+	}
+	{
+	  <JUMP> "("(x = name()| < NUM > )"," y = name() ")" 
+		| < WALK > "(" x=name() ("," (< O >| < D >))?")"{
+		 if(x!= null && !(WV.containsKey(x)))
+		 {	throw new Error("Variables not define");} }
+		|< LEAP > "(" (x=name()| < NUM >) ("," (< O >| < D >))?")"{
+		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
+		 {	throw new Error("Variables not define");}}
+		|<TURN> "(" < D > ")"
+		|< TURNTO> "(" < dir > ")" 
+		|<  DROP > "(" (x = name()| < NUM >) ")" { if(x!= null && !(( WV.containsKey(x)))) { throw new Error("Variables not define");}}
+		|<  GET > "(" (x = name()| < NUM >) ")" { if(x!= null && !( WV.containsKey(x))) { throw new Error("Variables not define");}}
+	    |< GRAB > "(" (x = name()| < NUM >) ")" { if(x!= null && !( WV.containsKey(x))) { throw new Error("Variables not define");}}
+	    |< LETGO > "(" (x = name()| < NUM >) ")" { if(x!= null && !( WV.containsKey(x))) { throw new Error("Variables not define");}}
+	    |< NOP > "(" ")"
+	  
 	}
 
 void controlstructure():
 	{
+	  boolean b;
 	}
 	{
 	 	(
-	 	  < IF >conditional()vblock()< ELSE >vblock()
+	 	< IF > b=conditional() { }vblock()< ELSE >vblock()
 	 	|< WHILE >conditional()vblock()
 	 	|< REPEAT >value()< TIMES >vblock() )
 	}
@@ -515,7 +556,7 @@ void walk():
 	  String Ori = null;
 	}
 	{
-	  < WALK >"(" x = num()("," (Dir = Direccion() | Ori= Orientation()))?")"
+	  < WALK >"(" x = value()("," (Dir = Direccion() | Ori= Orientation()))?")"
 	  { if (Ori != null )
 	  	{ world.moveForward(x,false);}
 	  	else if ( Dir != null )
@@ -538,7 +579,7 @@ void leap():
 	  String Ori = null;
 	}
 	{
-	  < LEAP >"(" x = num() ("," (Dir = Direccion() | Ori= Orientation()))?")"
+	  < LEAP >"(" x = value() ("," (Dir = Direccion() | Ori= Orientation()))?")"
 	  { if (Ori!= null )
 	  	{ world.moveForward(x,true);}
 	  	else if ( Dir != null )
@@ -710,5 +751,26 @@ String turn():
 	{
 	  < dirct > { return token.image; }
 	}
+
+boolean cfacing():
+{
+  String j;
+  boolean b = false;
+  int dir;
+}
+{
+  < O > { j=token.image;
+  			if ( j.equalsIgnoreCase("north")) {
+		  		dir = 0;}
+			else if ( j.equalsIgnoreCase("south")) {
+		  		dir = 1;}
+			else if ( j.equalsIgnoreCase("west")) {
+		  		dir = 3;}
+			else { dir = 2; }
+
+  			if(world.getFacing()== dir)
+  			{b=true; }
+  			 return b;}
+}
 
 /* FIN */
