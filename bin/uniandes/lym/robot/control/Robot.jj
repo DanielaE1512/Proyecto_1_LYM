@@ -464,7 +464,7 @@ void walk():
 	  String Ori = null;
 	}
 	{
-	  < WALK >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
+	  < WALK >"(" x = num()("," (Dir = Direccion() | Ori= Orientation()))?")"
 	  { if (Ori != null )
 	  	{ world.moveForward(x,false);}
 	  	else if ( Dir != null )
@@ -487,7 +487,7 @@ void leap():
 	  String Ori = null;
 	}
 	{
-	  < LEAP >"(" x = num()( Dir = Direccion() | Ori= Orientation())?")"
+	  < LEAP >"(" x = num() ("," (Dir = Direccion() | Ori= Orientation()))?")"
 	  { if (Ori!= null )
 	  	{ world.moveForward(x,true);}
 	  	else if ( Dir != null )
