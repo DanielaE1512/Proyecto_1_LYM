@@ -297,8 +297,8 @@ void ecommandsc(ArrayList< String > comandos,ArrayList< String > params) throws 
 		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
 		 {	throw new Error("Variables not define");} }
 		 
-		|<TURN> "("  < D > {comandos.add(token.image) } ")"
-		|< TURNTO> "(" < dir > {comandos.add(token.image) } ")" 
+		|<TURN> "("  < D > {comandos.add(token.image); } ")"
+		|< TURNTO> "(" < dir > {comandos.add(token.image); } ")" 
 		|<  DROP > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
 		|<  GET > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
 	    |< GRAB > "(" (x = name()| < NUM >) ")" { if(x!= null && !((params.contains(x)|| WV.containsKey(x)))) { throw new Error("Variables not define");}}
@@ -470,6 +470,7 @@ void vblockline():
 	 	)
 	}
 
+// Verificar la condición 
 boolean conditional():
 	{
 	  boolean b;
@@ -482,35 +483,34 @@ boolean conditional():
 	    								{ if(m ) { resultado = false;}
 	    								  else { resultado=true; } }
 	    							    else { if(m ) { resultado = true;}
-	    								  else { resultado=false; } }}
+	    								  else { resultado=false; } }
+	    								  return resultado;}
 
 	    
 		|< can >"("vblockline()")"
 		
 		  
 	  )
-	  { return resultado; }
+	 
 	}
 
 void vcommandsconditional() :
 	{
-	
+		int x = 0;
+		int y = 0;
+		lis
 	  
 	}
 	{
-	  <JUMP> "("(x = name()| < NUM > )"," y = name() ")" 
-		| < WALK > "(" x=name() ("," (< O >| < D >))?")"{
-		 if(x!= null && !(WV.containsKey(x)))
-		 {	throw new Error("Variables not define");} }
-		|< LEAP > "(" (x=name()| < NUM >) ("," (< O >| < D >))?")"{
-		 if(x!= null && !((params.contains(x)|| WV.containsKey(x))))
-		 {	throw new Error("Variables not define");}}
+	  	<JUMP> "("x = value()"," y = value() ")" 
+		| < WALK > "(" x=value() ("," (< O >| < D >))?")"
+		|< LEAP > "(" x=value() ("," (< O >| < D >))?")"
 		|<TURN> "(" < D > ")"
 		|< TURNTO> "(" < dir > ")" 
-		|<  DROP > "(" (x = name()| < NUM >) ")" { if(x!= null && !(( WV.containsKey(x)))) { throw new Error("Variables not define");}}
-		|<  GET > "(" (x = name()| < NUM >) ")" { if(x!= null && !( WV.containsKey(x))) { throw new Error("Variables not define");}}
-	    |< GRAB > "(" (x = name()| < NUM >) ")" { if(x!= null && !( WV.containsKey(x))) { throw new Error("Variables not define");}}
-	    |< LETGO > "(" (x = name()| < NUM >) ")" { if(x!= null && !( WV.containsKey(x))) { throw new Error("Variables not define");}}
+		|<  DROP > "(" x = value() ")" 
+		|<  GET > "(" x=value() ")" 
+	    |< GRAB > "(" x = value() ")" 
+	    |< LETGO > "(" x = value() ")" 
 	    |< NOP > "(" ")"
 	  
 	}
@@ -521,7 +521,7 @@ void controlstructure():
 	}
 	{
 	 	(
-	 	< IF > b=conditional() { }vblock()< ELSE >vblock()
+	 	< IF > b=conditional() { } vblock()< ELSE > vblock()
 	 	|< WHILE >conditional()vblock()
 	 	|< REPEAT >value()< TIMES >vblock() )
 	}
