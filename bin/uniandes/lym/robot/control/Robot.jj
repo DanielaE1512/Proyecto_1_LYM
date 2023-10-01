@@ -311,6 +311,7 @@ void ecommandsc(ArrayList< String > comandos,ArrayList< String > params) throws 
 	  
 	}
 
+// Para defirnir un procedimiento
 void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
 	{
 	  Integer x = null;
@@ -355,6 +356,7 @@ void controlstructurec(ArrayList< String > comandos,ArrayList< String > params):
 	 	)
 	}
 
+
 void vasignac(ArrayList< String > comandos, ArrayList< String > params):
 	{
 	  String id,id2 = null;
@@ -373,7 +375,7 @@ void vasignac(ArrayList< String > comandos, ArrayList< String > params):
 
 /* Otras funciones*/
 	
-
+//Definición variable
 void vvariable():
 	{
 	  String id;
@@ -383,6 +385,7 @@ void vvariable():
 	  < defvar >id=name()x=value() { WV.put(id,x); }
 	}
 
+//Asignación de variables
 void vasigna():
 	{
 	  String id;
@@ -400,6 +403,7 @@ void vasigna():
 	    }
 	}
 
+//Ejecutar bloque de comandos simples y procedimientos
 void gcommands():
 	{
 	}
@@ -407,9 +411,26 @@ void gcommands():
 	  (ecommands()|procedure()) 
 	}
 
-/* structures & commands */
+// Realizar el resto de acciones
+void vblock():
+	{
+	}
+	{
+	  "{"vblockline()(";"vblockline())*"}" 
+	}
 
 
+void vblockline():
+	{
+	}
+	{
+	 	(controlstructure()
+	 	|vasigna()
+	 	|gcommands()
+	 	)
+	}
+
+//Ejecutar comandos
 void ecommands():
 	{
 	  int x;
@@ -436,6 +457,7 @@ void ecommands():
 		
 	}
 	
+//Ejecutar procedimientos
 void procedure():
 	{
 	  String id;
@@ -448,31 +470,24 @@ void procedure():
 	}
 
 // Para verificar condicional que no se ejecuta
-void vblockconditional():
+ArrayList <String > vblockconditional():
 	{
+	  ArrayList <String > bloque = new ArrayList <String >();
+	  
 	}
 	{
-	  "{"vcommandsconditional()(";"vcommandsconditional())*"}" 
-	}
-
-// Realizar el resto de acciones
-void vblock():
-	{
-	}
-	{
-	  "{"vblockline()(";"vblockline())*"}" 
+	  "{" vblocklineconditional(bloque)(";"vblocklineconditional(bloque))*"}"
+	  { return bloque; }
 	}
 
+void vblocklineconditional( ArrayList <String > bloque):
+	{
+	}
+	{
+	  	vcommandsconditional(bloque)
+		| procedure()
+	}
 
-void vblockline():
-	{
-	}
-	{
-	 	(controlstructure()
-	 	|vasigna()
-	 	|gcommands()
-	 	)
-	}
 
 // Verificar la condición 
 boolean conditional():
@@ -480,6 +495,7 @@ boolean conditional():
 	  boolean b;
 	  boolean m;
 	  boolean resultado;
+	  ArrayList < String > bloque = new  ArrayList < String >();
 	}
 	{
 	  b = not()(
@@ -491,22 +507,20 @@ boolean conditional():
 	    								  return resultado;}
 
 	    
-		|< can >"("vblockline()")"
+		|< can >"(" ecommands()")" ) { return true; }
 		
-		  
-	  )
 	 
 	}
 
-void vcommandsconditional() :
+//Verificar comando para condicional
+void vcommandsconditional( ArrayList <String > bloque) :
 	{
 		int x = 0;
 		int y = 0;
-		lis
 	  
 	}
 	{
-	  	<JUMP> "("x = value()"," y = value() ")" 
+	  	<JUMP> "("x = value()"," y = value() ")" { bloque.add("jump");bloque.add(String.valueOf(x));bloque.add(String.valueOf(y));} 
 		| < WALK > "(" x=value() ("," (< O >| < D >))?")"
 		|< LEAP > "(" x=value() ("," (< O >| < D >))?")"
 		|<TURN> "(" < D > ")"
@@ -522,30 +536,26 @@ void vcommandsconditional() :
 void controlstructure():
 	{
 	  boolean b;
+	  ArrayList <String > bloque1 = new ArrayList <String >();
+	  ArrayList <String > bloque2 = new ArrayList <String >();
 	}
 	{
 	 	(
-<<<<<<< HEAD
-	 	< IF > b=conditional() { } vblock()< ELSE > vblock()
+	 	< IF > b=conditional() vblock() < ELSE > vblock()
 	 	|< WHILE >conditional()vblock()
-	 	|< REPEAT >value()< TIMES >vblock() )
-=======
-	 	< IF > b=conditional() { }vblock()< ELSE >vblock()
-	 	|< WHILE >conditionalcontrol()vblock() { lines.add("while");}
 	 	|< REPEAT >value()< TIMES >vblock()
 	 	)
 	}
 
 void conditionalcontrol():
 	{
-
+		boolean b;
 	}
 	{
 	  b = not()(
 	    < facing > "(" < O > {lines.add("facing");lines.add(token.image);}")" 
 		|< can >"("vblockline()")"
 	  )
->>>>>>> branch 'master' of https://github.com/DanielaE1512/Proyecto_1_LYM.git
 	}
 
 
@@ -766,7 +776,7 @@ boolean cfacing():
 	{
 	  String j;
 	  boolean b = false;
-	  int dir;
+	  int dir = 2;
 	}
 	{
 	  < O > { j=token.image;
@@ -776,7 +786,6 @@ boolean cfacing():
 			  		dir = 1;}
 				else if ( j.equalsIgnoreCase("west")) {
 			  		dir = 3;}
-				else { dir = 2; }
 	
 	  			if(world.getFacing()== dir)
 	  			{b=true; }
