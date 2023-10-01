@@ -67,6 +67,10 @@ public class Robot
 		value: nombre de los comandos usados dentro del procedimiento de manera ordenada.
 	*/
 	HashMap<String, ArrayList< String > > proceduresLines = new HashMap<String, ArrayList< String > >();
+
+	/*Lista que contiene todos lo comandos que se deben ejecutar, usada especialmente para loops*/
+
+	ArrayList< String > lines = new ArrayList< String >();
 	
 	String salida=new String();
 }
@@ -522,8 +526,20 @@ void controlstructure():
 	{
 	 	(
 	 	< IF > b=conditional() { }vblock()< ELSE >vblock()
-	 	|< WHILE >conditional()vblock()
-	 	|< REPEAT >value()< TIMES >vblock() )
+	 	|< WHILE >conditionalcontrol()vblock() { lines.add("while");}
+	 	|< REPEAT >value()< TIMES >vblock()
+	 	)
+	}
+
+void conditionalcontrol():
+	{
+
+	}
+	{
+	  b = not()(
+	    < facing > "(" < O > {lines.add("facing");lines.add(token.image);}")" 
+		|< can >"("vblockline()")"
+	  )
 	}
 
 
@@ -741,24 +757,24 @@ String turn():
 	}
 
 boolean cfacing():
-{
-  String j;
-  boolean b = false;
-  int dir;
-}
-{
-  < O > { j=token.image;
-  			if ( j.equalsIgnoreCase("north")) {
-		  		dir = 0;}
-			else if ( j.equalsIgnoreCase("south")) {
-		  		dir = 1;}
-			else if ( j.equalsIgnoreCase("west")) {
-		  		dir = 3;}
-			else { dir = 2; }
-
-  			if(world.getFacing()== dir)
-  			{b=true; }
-  			 return b;}
-}
+	{
+	  String j;
+	  boolean b = false;
+	  int dir;
+	}
+	{
+	  < O > { j=token.image;
+	  			if ( j.equalsIgnoreCase("north")) {
+			  		dir = 0;}
+				else if ( j.equalsIgnoreCase("south")) {
+			  		dir = 1;}
+				else if ( j.equalsIgnoreCase("west")) {
+			  		dir = 3;}
+				else { dir = 2; }
+	
+	  			if(world.getFacing()== dir)
+	  			{b=true; }
+	  			 return b;}
+	}
 
 /* FIN */
