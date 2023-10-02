@@ -542,6 +542,107 @@ void vcommandsconditional( ArrayList <String > bloque) :
 	  
 	}
 
+void vcommandsconditionalcan( ArrayList <String > bloque) :
+	{
+		boolean r = false;
+		int x = 0;
+		int y = 0;
+		int z,w;
+		String j;
+		int n = 0;
+	  	Point p;
+	}
+	{
+	  	<JUMP> "("x = value()"," y = value() ")" {p = new Point(x,y); n = world.getN(); if ( x <= n && y <= n && !wolrd.isBlocked(p) ) { r = true; } } 
+		| < WALK > "(" x=value() ("," (< O >| < D >) { j=token.image;})?")" {
+		  	p = world.getPosition();
+		  	z = p.x;
+		  	w = p.y;
+		  	y = 0;
+		   if(j != null)
+		   	{
+		   	  if ( j = "north" ) { y = 0; }
+		   	  else if ( j = "south" ) { y = 1; }
+		   	  else if ( j = "east" ) { y = 2; }
+		   	  else if ( j = "west" ) { y = 3; }
+		   	  else if ( j = "front") { y = world.getFacing();}
+		   	  
+		   	  else if ( j = "back") { 
+		   	   if (world.getFacing() == 0) { y = 1;}
+		   	   else if (world.getFacing() == 2) { y = 3; }
+		   	   else if (world.getFacing() == 3) { y = 2; }}
+		   	   
+		   	  else if ( j = "right") {
+		   	  	if 	(world.getFacing() == 0) { y = 2;}
+		   	  	else if (world.getFacing() == 1) { y = 3;}
+		   	  	else if (world.getFacing() == 2) { y = 1;}}
+		   	  
+		   	  else if ( j = "left") { 
+		   	   if (world.getFacing() == 0) { y = 3;}
+		   	   else if (world.getFacing() == 1) { y = 2;}
+		   	   else if (world.getFacing() == 3) { y = 1;}} 
+		   	}
+		   	else {y = getFacing();}
+		   	r = world.blockedInRange(w, z, x, y);
+		   }
+		|< LEAP > "(" x=value() ("," (< O >| < D >){ j=token.image;})?")" {
+		   	p = world.getPosition();
+		   	z = p.x;
+		   	w = p.y;
+		   	y = getFacing();
+			if(j != null)
+		   	{
+		   	  if ( j = "north" ) {  w += x; }
+		   	  else if ( j = "south") { w += -1*x; }
+		   	  else if ( j = "east" ) { z += x;  }
+		   	  else if ( j = "west" ) {z += -1*x; }
+
+		   	  else if ( j = "front" ) {
+		   	     if(y == 0) { w += x;}
+		   	     else if(y == 1) { w + =- 1*x;}
+		   	     else if(y == 2) { z += x;}
+		   	     else { z += -1*x;}
+		   	     }
+		   	     
+		   	  else if ( j = "back") {
+		   	     if(y == 0) { z += -1*x;}
+		   	     else if(y == 1) { w + = x;}
+		   	     else if(y == 2) { z += -1*x;}
+		   	     else if { z += x;}}
+		   	   
+		   	  else if ( j = "right") { 
+		   	  	if(y == 0) { z += x;}
+		   	    else if(y == 1) { z + =- 1*x;}
+		   	    else if(y == 2) { w += x;}
+		   	    else{ w += -1*x;} }
+		   	  
+		   	  else if ( j = "left") { 
+		   	   if(y == 0) { z += -1*x;}
+		   	   else if(y == 1) { z + = x;}
+		   	   else if(y == 2) { w += -1*x;}
+		   	   else { w += x;} }
+		   	}
+		   	else {
+		   	  if(y == 0) { w += x;}
+		   	  else if(y == 1) { w + =- 1*x;}
+		   	  else if(y == 2) { z += x;}
+		   	  else { z += -1*x;}
+		   	}
+		   	if (w <= n && z <= n ) {
+		   		p = new Point(w,z);
+		   		r = world.isBlocked(p); }
+			
+		  }
+		|<TURN> "(" < D > ")" { r = true;}
+		|< TURNTO> "(" < dir > ")" { r = true;} 
+		|<  DROP > "(" x = value() ")" { if ( x <= world.getMyChips()) { r = true;} } 
+		|<  GET > "(" x=value() ")" { if ( x <= world.chipsToPick()) { r = true;} } 
+	    |< GRAB > "(" x = value() ")" { if ( x <= world.countBalloons()) { r = true;} } 
+	    |< LETGO > "(" x = value() ")" { if ( x <= world.getMyBalloons()) { r = true;} }
+	    |< NOP > "(" ")" { r = true;}
+	    { return r}
+	}
+
 void controlstructure():
 	{
 	  boolean b;
@@ -559,11 +660,12 @@ void controlstructure():
 void conditionalcontrol():
 	{
 		boolean b;
+		ArrayList <String > bloque = new ArrayList <String >();
 	}
 	{
 	  b = not()(
 	    < facing > "(" < O > {lines.add("facing");lines.add(token.image);}")" 
-		|< can >"("vblockline()")"
+		|< can >"("vcommandsconditional()})")"
 	  )
 	}
 
