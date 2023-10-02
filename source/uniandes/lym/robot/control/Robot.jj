@@ -446,7 +446,7 @@ void ecommands():
 			{ if ( id.equalsIgnoreCase("right")) {
 			  		world.turnRight();}
 				  else if ( id.equalsIgnoreCase("left")) {
-			  		world.turnRight();world.turnRight();}
+			  		world.turnRight();world.turnRight();world.turnRight();}
 			      else { world.turnRight(); world.turnRight(); }}
 		|< TURNTO> "(" Orientation() ")"
 		|<  DROP > "(" x = value() ")" { world.putChips(x); }
@@ -517,19 +517,28 @@ void vcommandsconditional( ArrayList <String > bloque) :
 	{
 		int x = 0;
 		int y = 0;
+		String j= null;
 	  
 	}
 	{
 	  	<JUMP> "("x = value()"," y = value() ")" { bloque.add("jump");bloque.add(String.valueOf(x));bloque.add(String.valueOf(y));} 
-		| < WALK > "(" x=value() ("," (< O >| < D >))?")"
-		|< LEAP > "(" x=value() ("," (< O >| < D >))?")"
-		|<TURN> "(" < D > ")"
-		|< TURNTO> "(" < dir > ")" 
-		|<  DROP > "(" x = value() ")" 
-		|<  GET > "(" x=value() ")" 
-	    |< GRAB > "(" x = value() ")" 
-	    |< LETGO > "(" x = value() ")" 
-	    |< NOP > "(" ")"
+		| < WALK > "(" x=value() ("," (< O >| < D >) { j=token.image;})?")"
+		{ bloque.add("walk"); bloque.add(String.valueOf(x));
+			if ( j != null)
+			{ bloque.add(j);}
+		}
+		|< LEAP > "(" x=value() ("," (< O >| < D >){ j=token.image;})?")"
+		{ bloque.add("leap"); bloque.add(String.valueOf(x));
+			if ( j != null)
+			{ bloque.add(j);}
+		}
+		|<TURN> "(" < D > { j=token.image;}")" { bloque.add("turn");bloque.add(j); }
+		|< TURNTO> "(" < dir > { j=token.image;}")" { bloque.add("turnto");bloque.add(j); }
+		|<  DROP > "(" x = value() ")" { bloque.add("drop");bloque.add(String.valueOf(x)); }
+		|<  GET > "(" x=value() ")" { bloque.add("get");bloque.add(String.valueOf(x)); }
+	    |< GRAB > "(" x = value() ")" { bloque.add("grab");bloque.add(String.valueOf(x)); }
+	    |< LETGO > "(" x = value() ")" { bloque.add("letgo");bloque.add(String.valueOf(x)); }
+	    |< NOP > "(" ")"{ bloque.add("nop"); }
 	  
 	}
 
@@ -557,6 +566,179 @@ void conditionalcontrol():
 		|< can >"("vblockline()")"
 	  )
 	}
+
+
+void ejecutarcommandsconditionals(ArrayList <String > bloque):
+{
+}
+{ {
+	String nombre= bloque.get(0);
+	bloque.remove(0);
+	if (nombre.equalsIgnoreCase("jump")){
+	  int primero= Integer.parseInt(bloque.get(0));
+	  bloque.remove(0);
+	  int segundo= Integer.parseInt(bloque.get(0));
+	  bloque.remove(0);
+	  world.setPostion(primero,segundo);}
+
+	else if(nombre.equalsIgnoreCase("walk")) {ejecutarwalk(bloque); }
+  	else if(nombre.equalsIgnoreCase("leap")) {ejecutarleap(bloque); }
+  	else if(nombre.equalsIgnoreCase("turn")) {String id = bloque.get(0);
+  											  bloque.remove(0);
+  	  										  if ( id.equalsIgnoreCase("right")) {
+			  									world.turnRight();}
+				  							  else if ( id.equalsIgnoreCase("left")) {
+			  									world.turnRight();world.turnRight();world.turnRight();}
+			      							  else { world.turnRight(); world.turnRight(); } }
+
+	else if(nombre.equalsIgnoreCase("turnto")) {String j= bloque.get(0);
+												bloque.remove(0);
+	  											int dir = 2;
+	  											int facing = 10;
+
+												if ( j.equalsIgnoreCase("north")) {
+		  											dir = 0;}
+												else if ( j.equalsIgnoreCase("south")) {
+		  											dir = 1;}
+												else if ( j.equalsIgnoreCase("west")) {
+		  											dir = 3;}
+
+		
+	  											while ( dir != facing) {
+	  	  											world.turnRight();
+	  	  										facing = world.getFacing(); } }
+
+   else if(nombre.equalsIgnoreCase("drop")) {  int x= Integer.parseInt(bloque.get(0)); bloque.remove(0);world.putChips(x);}
+   else if(nombre.equalsIgnoreCase("get")) {  int x= Integer.parseInt(bloque.get(0)); bloque.remove(0);world.pickChips(x);}
+   else if(nombre.equalsIgnoreCase("grab")) {  int x= Integer.parseInt(bloque.get(0)); bloque.remove(0);world.grabBalloons(x);}
+   else if(nombre.equalsIgnoreCase("letgo")) {  int x= Integer.parseInt(bloque.get(0)); bloque.remove(0);world.putBalloons(x);}
+} } 
+
+void ejecutarwalk(ArrayList <String > bloque):
+{
+  
+}
+{
+  {
+   ArrayList<String> directions = new ArrayList<>();
+        directions.add("front");
+        directions.add("right");
+        directions.add("left");
+		directions.add("back");
+
+  ArrayList<String> orientations = new ArrayList<>();
+       
+        orientations.add("north");
+        orientations.add("south");
+        orientations.add("west");
+        orientations.add("east");
+		
+        
+  int primero =  Integer.parseInt(bloque.get(0));
+  bloque.remove(0);
+  String segundo= null;
+  if (directions.contains(bloque.get(0)) || orientations.contains(bloque.get(0)))
+      { segundo = bloque.get(0);
+        bloque.remove(0);}
+
+   if (segundo != null) {
+     if ( directions.contains(bloque.get(0))) {
+       { for ( int i = 1; i <= primero; i++)
+	  			{ if ( segundo.equalsIgnoreCase("right")) {
+			  		world.right();}
+				  else if ( segundo.equalsIgnoreCase("left")) {
+			  		world.left();}
+			      else if ( segundo.equalsIgnoreCase("front")) {
+			  		world.up();}
+			      else { world.down(); }}}}
+
+	 else {
+	   	int dir = 2;
+	  	int facing = 10;
+
+		if ( segundo.equalsIgnoreCase("north")) {
+		  dir = 0;}
+		else if ( segundo.equalsIgnoreCase("south")) {
+		  dir = 1;}
+		else if ( segundo.equalsIgnoreCase("west")) {
+		  dir = 3;}  
+
+		
+	  	while ( dir != facing) {
+	  	  world.turnRight();
+	  	  facing = world.getFacing(); }
+
+	  	 world.moveForward(primero,false);} }
+
+	 else { world.moveForward(primero,false);} 
+
+  
+   
+} }
+
+void ejecutarleap(ArrayList <String > bloque):
+{
+  
+}
+{
+  {
+   ArrayList<String> directions = new ArrayList<>();
+        directions.add("front");
+        directions.add("right");
+        directions.add("left");
+		directions.add("back");
+
+  ArrayList<String> orientations = new ArrayList<>();
+       
+        orientations.add("north");
+        orientations.add("south");
+        orientations.add("west");
+        orientations.add("east");
+		
+        
+  int primero =  Integer.parseInt(bloque.get(0));
+  bloque.remove(0);
+  String segundo= null;
+  if (directions.contains(bloque.get(0)) || orientations.contains(bloque.get(0)))
+      { segundo = bloque.get(0);
+        bloque.remove(0);}
+
+   if (segundo != null) {
+     if ( directions.contains(bloque.get(0)))
+     		{ int x = world.getPosition().x;
+	  		  int y= world.getPosition().y;
+	  		  if ( segundo.equalsIgnoreCase("right")) {
+			  		world.setPostion(primero+x,y);}
+				  else if ( segundo.equalsIgnoreCase("left")) {
+			  		world.setPostion(x-primero,y);}
+			      else if ( segundo.equalsIgnoreCase("front")) {
+			  		world.setPostion(x,primero+y);}
+			      else { world.setPostion(x,y-primero); }}
+
+	 else {
+	   	int dir = 2;
+	  	int facing = 10;
+
+		if ( segundo.equalsIgnoreCase("north")) {
+		  dir = 0;}
+		else if ( segundo.equalsIgnoreCase("south")) {
+		  dir = 1;}
+		else if ( segundo.equalsIgnoreCase("west")) {
+		  dir = 3;}  
+
+		
+	  	while ( dir != facing) {
+	  	  world.turnRight();
+	  	  facing = world.getFacing(); }
+
+	  	 world.moveForward(primero,true);} }
+
+	 else { world.moveForward(primero,true);} 
+
+  
+   
+} }
+  
 
 
 //Funciones
@@ -595,14 +777,15 @@ void leap():
 	  { if (Ori!= null )
 	  	{ world.moveForward(x,true);}
 	  	else if ( Dir != null )
-	  		{ for ( int i = 1; i <= x; i++)
-	  			{ if ( Dir.equalsIgnoreCase("right")) {
-			  		world.right();}
+	  		{ int primero = world.getPosition().x;
+	  		  int segundo= world.getPosition().y;
+	  		  if ( Dir.equalsIgnoreCase("right")) {
+			  		world.setPostion(primero+x,segundo);}
 				  else if ( Dir.equalsIgnoreCase("left")) {
-			  		world.left();}
+			  		world.setPostion(primero-x,segundo);}
 			      else if ( Dir.equalsIgnoreCase("front")) {
-			  		world.up();}
-			      else { world.down(); }}}
+			  		world.setPostion(primero,segundo+x);}
+			      else { world.setPostion(primero,segundo-x); }}
 		else { world.moveForward(x,true);}
 	  }
 	}
